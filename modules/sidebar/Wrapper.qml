@@ -23,7 +23,7 @@ Item {
 
     // Extend width toggle (Ctrl+O)
     property bool isExtended: false
-    implicitWidth: isExtended ? Math.min(screen ? screen.width * 0.48 : 680, 720) : Tokens.sizes.sidebar.width
+    implicitWidth: isExtended ? 680 : Tokens.sizes.sidebar.width
 
     Behavior on implicitWidth {
         Anim {
@@ -31,7 +31,7 @@ Item {
         }
     }
 
-    opacity: Math.min(1, Math.pow(Math.max(0, 1 - offsetScale), 2))
+    opacity: 1 - offsetScale
 
     Behavior on offsetScale {
         Anim {
