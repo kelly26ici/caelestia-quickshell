@@ -13,6 +13,7 @@ Item {
 
     property var popouts
     property var utilities
+    property var sidebarWrapper
     property bool sidebarStreaming: false
 
     readonly property bool isBarHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
@@ -236,6 +237,7 @@ Item {
                         x: root.activeTab === "ai" ? 0 : (indicator.activeIndex < 1 ? width : -width)
                         opacity: root.activeTab === "ai" ? 1 : 0
                         visible: opacity > 0
+                        wrapperItem: root.sidebarWrapper
 
                         Connections {
                             target: aiAssistant

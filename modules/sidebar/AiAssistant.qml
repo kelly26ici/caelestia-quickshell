@@ -29,6 +29,56 @@ Item {
     property string commandNotice: ""
     property string attachedFilePath: ""
     property string attachedFileBase64: ""
+    property var wrapperItem: null
+
+    focus: true
+
+    function toggleExtend() {
+        if (wrapperItem && wrapperItem.hasOwnProperty("isExtended")) {
+            wrapperItem.isExtended = !wrapperItem.isExtended;
+            root.commandNotice = wrapperItem.isExtended ? "Sidebar extended" : "Sidebar normal width";
+            commandNoticeTimer.restart();
+        }
+    }
+
+    function togglePin() {
+        var comps = ShellState.componentsForActive();
+        if (comps && comps.interactionWrapper) {
+            comps.interactionWrapper.sidebarShortcutActive = !comps.interactionWrapper.sidebarShortcutActive;
+            root.commandNotice = comps.interactionWrapper.sidebarShortcutActive ? "Sidebar pinned" : "Sidebar unpinned";
+            commandNoticeTimer.restart();
+        }
+    }
+
+    function dismissSidebar() {
+        root.commandNotice = "Dismissing sidebar...";
+        commandNoticeTimer.restart();
+        root.screenState.sidebar = false;
+    }
+
+    function focusInput() {
+        if (!isHistoryTab && inputArea) {
+            inputArea.forceActiveFocus();
+        }
+    }
+
+    Keys.onPressed: event => {
+        if (event.modifiers === Qt.ControlModifier) {
+            if (event.key === Qt.Key_O) {
+                root.toggleExtend();
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_P) {
+                root.togglePin();
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_D) {
+                root.dismissSidebar();
+                event.accepted = true;
+                return;
+            }
+        }
+    }
 
     Timer {
         id: typingTimer
@@ -1384,12 +1434,11 @@ Item {
                                         currentActionText = "Searching the web with Tavily...";
                                         var query = args.query;
                                         var page = args.page || 1;
-                                        var tvKey = GlobalConfig.ai.tavilyApiKey || "";
-                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/tavily_search.py" --mode search --query "' + query.replace(new RegExp("\"", "g"), '\\"') + '" --page ' + page + ' --api-key "' + tvKey + '"', "exec_" + toolName);
+                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/orion_search.py" --mode search --query "' + query.replace(new RegExp("\"", "g"), '\\"') + '" --page ' + page, "exec_" + toolName);
                                     } else if (toolName === "read_webpage") {
                                         currentActionText = "Reading webpage...";
                                         var url = args.url;
-                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/tavily_search.py" --mode read --url "' + url.replace(new RegExp("\"", "g"), '\\"') + '"', "exec_" + toolName);
+                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/orion_search.py" --mode read --url "' + url.replace(new RegExp("\"", "g"), '\\"') + '"', "exec_" + toolName);
                                     } else if (toolName === "open_app") {
                                         currentActionText = "Opening app...";
                                         var app = args.app_name;
@@ -1559,7 +1608,7 @@ Item {
                     "type": "function",
                     "function": {
                         "name": "web_search",
-                        "description": "Searches the web using a headless Firefox browser. Returns the top 5 results with snippets and URLs. Requires the Playwright Firefox browser; if the call fails, tell the user to run: playwright install firefox.",
+                        "description": "Searches the live web using the Tavily Search API. Returns direct synthesized answers, ranked search results, URLs, and relevant content snippets.",
                         "parameters": {
                             "type": "object",
                             "properties": {
@@ -2393,27 +2442,15 @@ Item {
                                  Keys.onPressed: event => {
                                      if (event.modifiers === Qt.ControlModifier) {
                                          if (event.key === Qt.Key_O) {
-                                             var wrapper = CUtils.findParent(root, "offsetScale");
-                                             if (wrapper && wrapper.hasOwnProperty("isExtended")) {
-                                                 wrapper.isExtended = !wrapper.isExtended;
-                                                 root.commandNotice = wrapper.isExtended ? "Sidebar extended" : "Sidebar normal width";
-                                                 commandNoticeTimer.restart();
-                                             }
+                                             root.toggleExtend();
                                              event.accepted = true;
                                              return;
                                          } else if (event.key === Qt.Key_P) {
-                                             var comps = ShellState.componentsForActive();
-                                             if (comps && comps.interactionWrapper) {
-                                                 comps.interactionWrapper.sidebarShortcutActive = !comps.interactionWrapper.sidebarShortcutActive;
-                                                 root.commandNotice = comps.interactionWrapper.sidebarShortcutActive ? "Sidebar pinned" : "Sidebar unpinned";
-                                                 commandNoticeTimer.restart();
-                                             }
+                                             root.togglePin();
                                              event.accepted = true;
                                              return;
                                          } else if (event.key === Qt.Key_D) {
-                                             root.commandNotice = "Dismissing sidebar...";
-                                             commandNoticeTimer.restart();
-                                             root.screenState.sidebar = false;
+                                             root.dismissSidebar();
                                              event.accepted = true;
                                              return;
                                          }

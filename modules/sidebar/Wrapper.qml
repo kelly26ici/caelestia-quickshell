@@ -59,6 +59,7 @@ Item {
             screenState: root.screenState
             popouts: root.popouts
             utilities: root.utilities
+            sidebarWrapper: root
             onSidebarStreamingChanged: root.isStreaming = sidebarStreaming
         }
     }
