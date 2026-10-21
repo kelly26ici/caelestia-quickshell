@@ -55,10 +55,10 @@ StyledRect {
                 color: Colours.palette.m3primaryContainer
                 visible: !root.isImage
 
-                Icon {
+                MaterialIcon {
                     anchors.centerIn: parent
-                    name: "description"
-                    size: 20
+                    text: "description"
+                    font.pixelSize: 20
                     color: Colours.palette.m3onPrimaryContainer
                 }
             }
@@ -84,13 +84,23 @@ StyledRect {
             }
         }
 
-        IconButton {
+        Item {
+            Layout.preferredWidth: 26
+            Layout.preferredHeight: 26
             Layout.alignment: Qt.AlignVCenter
-            icon: "close"
-            iconSize: 16
-            implicitWidth: 26
-            implicitHeight: 26
-            onClicked: root.remove()
+
+            MaterialIcon {
+                anchors.centerIn: parent
+                text: "close"
+                font.pixelSize: 18
+                color: Colours.palette.m3onSurfaceVariant
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.remove()
+            }
         }
     }
 }
