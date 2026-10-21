@@ -27,6 +27,8 @@ Item {
     property var currentRequest: null
     property bool isStreaming: false
     property string commandNotice: ""
+    property string attachedFilePath: ""
+    property string attachedFileBase64: ""
 
     Timer {
         id: typingTimer
@@ -320,6 +322,30 @@ Item {
         if (isTyping) listView.positionViewAtEnd();
     }
     property bool inAgentLoop: false
+
+    Process {
+        id: clipAttachProc
+        command: ["bash", Quickshell.shellDir + "/scripts/ai/attach_clipboard.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var p = (text || "").trim();
+                if (p.length > 0) {
+                    root.attachedFilePath = p;
+                    b64EncodeProc.command = ["python3", Quickshell.shellDir + "/scripts/ai/image_to_base64.py", p];
+                    b64EncodeProc.running = true;
+                }
+            }
+        }
+    }
+
+    Process {
+        id: b64EncodeProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.attachedFileBase64 = (text || "").trim();
+            }
+        }
+    }
 
     function runAgentCommand(cmd, type) {
         var processQml = "import QtQuick\n" +
@@ -1495,11 +1521,22 @@ Item {
                 }
 
             } else {
+                var userContent;
+                if (root.attachedFileBase64.length > 0) {
+                    userContent = [
+                        { "type": "text", "text": promptText },
+                        { "type": "image_url", "image_url": { "url": root.attachedFileBase64 } }
+                    ];
+                } else {
+                    userContent = promptText;
+                }
                 var toolMsg = {
                     "role": "user",
-                    "content": promptText
+                    "content": userContent
                 };
                 messages.push(toolMsg);
+                root.attachedFilePath = "";
+                root.attachedFileBase64 = "";
             }
             pendingToolCalls = null;
             pendingAssistantContent = "";
@@ -2177,6 +2214,21 @@ Item {
                      }
                  }
 
+                 // Attached File Preview Indicator
+                 AttachedFileIndicator {
+                     id: attachedIndicator
+                     anchors.bottom: commandHelper.visible ? commandHelper.top : inputBoxRow.top
+                     anchors.left: parent.left
+                     anchors.right: parent.right
+                     anchors.bottomMargin: Tokens.spacing.small
+                     z: 15
+                     filePath: root.attachedFilePath
+                     onRemove: {
+                         root.attachedFilePath = "";
+                         root.attachedFileBase64 = "";
+                     }
+                 }
+
                  // Slash-command hints and feedback
                  StyledRect {
                      id: commandHelper
@@ -2339,6 +2391,9 @@ Item {
                                  }
 
                                  Keys.onPressed: event => {
+                                     if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V && !(event.modifiers & Qt.ShiftModifier)) {
+                                         clipAttachProc.running = true;
+                                     }
                                      if (event.key === Qt.Key_Tab && root.commandMatches.length > 0) {
                                          event.accepted = true;
                                          inputArea.text = "/" + root.commandMatches[0].name + " ";
