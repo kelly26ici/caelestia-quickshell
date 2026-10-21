@@ -1355,14 +1355,15 @@ Item {
                                     }
                                     
                                     if (toolName === "web_search") {
-                                        currentActionText = "Searching the web...";
+                                        currentActionText = "Searching the web with Tavily...";
                                         var query = args.query;
                                         var page = args.page || 1;
-                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/assets/scripts/orion_search.py" --mode search --query "' + query.replace(new RegExp("\"", "g"), '\"') + '" --page ' + page, "exec_" + toolName);
+                                        var tvKey = GlobalConfig.ai.tavilyApiKey || "";
+                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/tavily_search.py" --mode search --query "' + query.replace(new RegExp("\"", "g"), '\\"') + '" --page ' + page + ' --api-key "' + tvKey + '"', "exec_" + toolName);
                                     } else if (toolName === "read_webpage") {
                                         currentActionText = "Reading webpage...";
                                         var url = args.url;
-                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/assets/scripts/orion_search.py" --mode read --url "' + url.replace(new RegExp("\"", "g"), '\"') + '"', "exec_" + toolName);
+                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/tavily_search.py" --mode read --url "' + url.replace(new RegExp("\"", "g"), '\\"') + '"', "exec_" + toolName);
                                     } else if (toolName === "open_app") {
                                         currentActionText = "Opening app...";
                                         var app = args.app_name;
