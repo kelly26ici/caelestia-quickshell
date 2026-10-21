@@ -2391,6 +2391,33 @@ Item {
                                  }
 
                                  Keys.onPressed: event => {
+                                     if (event.modifiers === Qt.ControlModifier) {
+                                         if (event.key === Qt.Key_O) {
+                                             var wrapper = CUtils.findParent(root, "offsetScale");
+                                             if (wrapper && wrapper.hasOwnProperty("isExtended")) {
+                                                 wrapper.isExtended = !wrapper.isExtended;
+                                                 root.commandNotice = wrapper.isExtended ? "Sidebar extended" : "Sidebar normal width";
+                                                 commandNoticeTimer.restart();
+                                             }
+                                             event.accepted = true;
+                                             return;
+                                         } else if (event.key === Qt.Key_P) {
+                                             var comps = ShellState.componentsForActive();
+                                             if (comps && comps.interactionWrapper) {
+                                                 comps.interactionWrapper.sidebarShortcutActive = !comps.interactionWrapper.sidebarShortcutActive;
+                                                 root.commandNotice = comps.interactionWrapper.sidebarShortcutActive ? "Sidebar pinned" : "Sidebar unpinned";
+                                                 commandNoticeTimer.restart();
+                                             }
+                                             event.accepted = true;
+                                             return;
+                                         } else if (event.key === Qt.Key_D) {
+                                             root.commandNotice = "Dismissing sidebar...";
+                                             commandNoticeTimer.restart();
+                                             root.screenState.sidebar = false;
+                                             event.accepted = true;
+                                             return;
+                                         }
+                                     }
                                      if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V && !(event.modifiers & Qt.ShiftModifier)) {
                                          clipAttachProc.running = true;
                                      }

@@ -55,7 +55,7 @@ StyledRect {
                 MaterialIcon {
                     anchors.centerIn: parent
                     text: "description"
-                    size: 20
+                    fontStyle: Tokens.font.icon.medium
                     color: Colours.palette.m3onPrimaryContainer
                 }
             }
@@ -84,7 +84,6 @@ StyledRect {
         IconButton {
             Layout.alignment: Qt.AlignVCenter
             icon: "close"
-            iconSize: 16
             implicitWidth: 26
             implicitHeight: 26
             onClicked: root.remove()
