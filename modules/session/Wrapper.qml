@@ -1,0 +1,46 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import Caelestia.Config
+import qs.components
+
+Item {
+    id: root
+
+    required property ScreenState screenState
+    required property bool sidebarVisible
+    readonly property real nonAnimWidth: content.implicitWidth
+
+    readonly property bool shouldBeActive: screenState.session && Config.session.enabled
+    property real offsetScale: shouldBeActive ? 0 : 1
+    property real sidebarOffset: sidebarVisible ? 14 : 0
+
+    visible: offsetScale < 1
+    anchors.leftMargin: Config.bar.position === "right" ? (-implicitWidth - 5 - sidebarOffset) * offsetScale : 0
+    anchors.rightMargin: Config.bar.position !== "right" ? (-implicitWidth - 5 - sidebarOffset) * offsetScale : 0
+    implicitWidth: content.implicitWidth
+    implicitHeight: content.implicitHeight || 510 // Hard coded fallback for first open
+    opacity: Math.min(1, Math.pow(Math.max(0, 1 - offsetScale), 1.5))
+    scale: 0.95 + 0.05 * (1 - offsetScale)
+    rotation: -0.8 * offsetScale
+    transformOrigin: Item.Right
+
+    Behavior on offsetScale {
+        Anim {
+            type: Anim.EmphasizedLarge
+        }
+    }
+
+    Loader {
+        id: content
+
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+
+        active: root.shouldBeActive || root.visible
+
+        sourceComponent: Content {
+            screenState: root.screenState
+        }
+    }
+}
