@@ -465,8 +465,19 @@ Item {
 
     Process {
         id: storeDirProc
-        command: ["mkdir", "-p", Paths.data + "/ai"]
-        onExited: chatStore.reload()
+        command: ["python3", Quickshell.shellDir + "/scripts/ai/load_chat_history.py"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var raw = text ? text.trim() : "";
+                var data = [];
+                try {
+                    data = JSON.parse(raw);
+                } catch (e) {
+                    data = [];
+                }
+                root.applyStoreData(data);
+            }
+        }
     }
 
     Timer {
@@ -780,14 +791,24 @@ Item {
         flushHistory();
     }
 
+    Process {
+        id: historySaverProc
+        command: ["python3", Quickshell.shellDir + "/scripts/ai/save_chat_history.py"]
+    }
+
     function flushHistory() {
         historySaveTimer.stop();
-        if (storeReady)
-            chatStore.setText(JSON.stringify({
+        if (storeReady) {
+            var payload = JSON.stringify({
                 "version": 2,
                 "lastChatId": currentChatId || lastChatId,
                 "chats": allChatSessions
-            }));
+            });
+            chatStore.setText(payload);
+            // Robust disk write fallback
+            var pQml = "import QtQuick\nimport Quickshell.Io\nProcess { command: [\"sh\", \"-c\", \"cat > ~/.local/share/caelestia/ai/chats.json\"]; stdin: StdioStream { text: " + JSON.stringify(payload) + " }; running: true; onExited: destroy(); }";
+            try { Qt.createQmlObject(pQml, root, "saver_" + Date.now()); } catch(e) {}
+        }
     }
 
     function saveHistory() {

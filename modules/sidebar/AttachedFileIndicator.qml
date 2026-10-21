@@ -2,9 +2,12 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import Caelestia
+import Caelestia.Config
 import qs.components
+import qs.components.containers
 import qs.components.controls
+import qs.services
+import qs.utils
 
 StyledRect {
     id: root
@@ -52,10 +55,10 @@ StyledRect {
                 color: Colours.palette.m3primaryContainer
                 visible: !root.isImage
 
-                MaterialIcon {
+                Icon {
                     anchors.centerIn: parent
-                    text: "description"
-                    fontStyle: Tokens.font.icon.medium
+                    name: "description"
+                    size: 20
                     color: Colours.palette.m3onPrimaryContainer
                 }
             }
@@ -84,6 +87,7 @@ StyledRect {
         IconButton {
             Layout.alignment: Qt.AlignVCenter
             icon: "close"
+            iconSize: 16
             implicitWidth: 26
             implicitHeight: 26
             onClicked: root.remove()
