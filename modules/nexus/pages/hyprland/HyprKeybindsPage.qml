@@ -14,12 +14,165 @@ import qs.modules.nexus.common
 
 PageBase {
     id: root
-    
+
     title: qsTr("Keybinds")
     isSubPage: true
-    
+
     property var vars: ({})
-    
+    property var defaults: ({})
+
+    readonly property string configPath: Quickshell.env("HOME") + "/.config/caelestia/hypr-vars.lua"
+    readonly property string defaultsPath: Quickshell.env("HOME") + "/.config/hypr/variables.lua"
+
+    // Single source of truth for the visual editor. Every bind that exists in
+    // the Hyprland config is listed here, grouped by what it does.
+    readonly property var keybindSections: [
+        {
+            title: qsTr("Launcher & Shell"),
+            entries: [
+                { key: "kbLauncher", label: qsTr("Launcher") },
+                { key: "kbSession", label: qsTr("Session menu") },
+                { key: "kbShowSidebar", label: qsTr("Toggle sidebar") },
+                { key: "kbClearNotifs", label: qsTr("Clear notifications") },
+                { key: "kbShowPanels", label: qsTr("Show all panels") },
+                { key: "kbWorkspaceOverview", label: qsTr("Workspace overview") },
+                { key: "kbLock", label: qsTr("Lock screen") },
+                { key: "kbRestoreLock", label: qsTr("Restore lock screen") },
+                { key: "kbSleep", label: qsTr("Sleep") },
+                { key: "kbRestartShell", label: qsTr("Restart shell") },
+                { key: "kbReloadShell", label: qsTr("Reload shell") },
+                { key: "kbTestNotification", label: qsTr("Test notification") },
+                { key: "kbAiAssistant", label: qsTr("AI assistant") },
+                { key: "kbWallpaperSelector", label: qsTr("Wallpaper selector") }
+            ]
+        },
+        {
+            title: qsTr("Workspaces"),
+            entries: [
+                { key: "kbGoToWs", label: qsTr("Go to workspace"), hint: qsTr("hold + 1–0") },
+                { key: "kbGoToWsGroup", label: qsTr("Go to workspace group"), hint: qsTr("hold + 1–0") },
+                { key: "kbMoveWinToWs", label: qsTr("Move window to workspace"), hint: qsTr("hold + 1–0") },
+                { key: "kbMoveWinToWsGroup", label: qsTr("Move window to workspace group"), hint: qsTr("hold + 1–0") },
+                { key: "kbMoveWinToWsSpecial", label: qsTr("Move window to special workspace") },
+                { key: "kbMoveWinFromWsSpecial", label: qsTr("Move window from special workspace") },
+                { key: "kbMoveWinToWsNext", label: qsTr("Move window to next workspace") },
+                { key: "kbMoveWinToWsPrev", label: qsTr("Move window to previous workspace") },
+                { key: "kbNextWs", label: qsTr("Next workspace") },
+                { key: "kbPrevWs", label: qsTr("Previous workspace") },
+                { key: "kbNextWsGroup", label: qsTr("Next workspace group") },
+                { key: "kbPrevWsGroup", label: qsTr("Previous workspace group") }
+            ]
+        },
+        {
+            title: qsTr("Window Groups"),
+            entries: [
+                { key: "kbWindowCycleNext", label: qsTr("Cycle to next window") },
+                { key: "kbWindowCyclePrev", label: qsTr("Cycle to previous window") },
+                { key: "kbWindowGroupCycleNext", label: qsTr("Cycle to next window in group") },
+                { key: "kbWindowGroupCyclePrev", label: qsTr("Cycle to previous window in group") },
+                { key: "kbUngroup", label: qsTr("Ungroup window") },
+                { key: "kbToggleGroup", label: qsTr("Toggle group") },
+                { key: "kbGroupLockActive", label: qsTr("Lock active group") }
+            ]
+        },
+        {
+            title: qsTr("Window Actions"),
+            entries: [
+                { key: "kbFocusWindow", label: qsTr("Focus window"), hint: qsTr("hold + arrows") },
+                { key: "kbMoveWindowDir", label: qsTr("Move window"), hint: qsTr("hold + arrows") },
+                { key: "kbWindowDecreaseWidth", label: qsTr("Decrease width") },
+                { key: "kbWindowIncreaseWidth", label: qsTr("Increase width") },
+                { key: "kbWindowDecreaseHeight", label: qsTr("Decrease height") },
+                { key: "kbWindowIncreaseHeight", label: qsTr("Increase height") },
+                { key: "kbMoveWindow", label: qsTr("Move window with mouse (keyboard)") },
+                { key: "kbResizeWindow", label: qsTr("Resize window with mouse (keyboard)") },
+                { key: "kbCenterWindow", label: qsTr("Center window") },
+                { key: "kbNormalizeWindow", label: qsTr("Normalize window") },
+                { key: "kbWindowPip", label: qsTr("Picture-in-picture") },
+                { key: "kbPinWindow", label: qsTr("Pin window") },
+                { key: "kbWindowFullscreen", label: qsTr("Fullscreen") },
+                { key: "kbWindowBorderedFullscreen", label: qsTr("Bordered fullscreen") },
+                { key: "kbToggleWindowFloating", label: qsTr("Toggle floating") },
+                { key: "kbCloseWindow", label: qsTr("Close window") }
+            ]
+        },
+        {
+            title: qsTr("Mouse"),
+            entries: [
+                { key: "kbMoveWindowMouse", label: qsTr("Move window (drag)") },
+                { key: "kbResizeWindowMouse", label: qsTr("Resize window (drag)") }
+            ]
+        },
+        {
+            title: qsTr("Special Workspaces"),
+            entries: [
+                { key: "kbSpecialWs", label: qsTr("Special workspace toggle") },
+                { key: "kbSystemMonitorWs", label: qsTr("System monitor") },
+                { key: "kbMusicWs", label: qsTr("Music") },
+                { key: "kbCommunicationWs", label: qsTr("Communication") },
+                { key: "kbTodoWs", label: qsTr("To-do") }
+            ]
+        },
+        {
+            title: qsTr("Apps"),
+            entries: [
+                { key: "kbTerminal", label: qsTr("Terminal") },
+                { key: "kbBrowser", label: qsTr("Browser") },
+                { key: "kbEditor", label: qsTr("Editor") },
+                { key: "kbFileExplorer", label: qsTr("File explorer") },
+                { key: "kbAudioSettings", label: qsTr("Audio settings") }
+            ]
+        },
+        {
+            title: qsTr("Screenshots & Recording"),
+            entries: [
+                { key: "kbScreenshot", label: qsTr("Screenshot") },
+                { key: "kbScreenshotFreeze", label: qsTr("Freeze screen for screenshot") },
+                { key: "kbScreenshotRegion", label: qsTr("Screenshot region") },
+                { key: "kbRecord", label: qsTr("Record screen") },
+                { key: "kbRecordSound", label: qsTr("Record screen with sound") },
+                { key: "kbRecordRegion", label: qsTr("Record region") },
+                { key: "kbColorPicker", label: qsTr("Colour picker") }
+            ]
+        },
+        {
+            title: qsTr("Media, Volume & Brightness"),
+            entries: [
+                { key: "kbMediaToggle", label: qsTr("Play / pause") },
+                { key: "kbMediaNext", label: qsTr("Next track") },
+                { key: "kbMediaPrev", label: qsTr("Previous track") },
+                { key: "kbMediaStop", label: qsTr("Stop media") },
+                { key: "kbVolumeMute", label: qsTr("Mute output") },
+                { key: "kbVolumeUp", label: qsTr("Volume up") },
+                { key: "kbVolumeDown", label: qsTr("Volume down") },
+                { key: "kbMicMute", label: qsTr("Mute microphone") },
+                { key: "kbBrightnessUp", label: qsTr("Brightness up") },
+                { key: "kbBrightnessDown", label: qsTr("Brightness down") }
+            ]
+        },
+        {
+            title: qsTr("Clipboard & Emoji"),
+            entries: [
+                { key: "kbClipboard", label: qsTr("Clipboard history") },
+                { key: "kbClipboardDel", label: qsTr("Delete clipboard entry") },
+                { key: "kbClipboardPasteLatest", label: qsTr("Paste latest clipboard entry") },
+                { key: "kbEmoji", label: qsTr("Emoji picker") }
+            ]
+        }
+    ]
+
+    // Non-keybind settings are kept in the same write order as before so
+    // saving a keybind does not scramble the rest of hypr-vars.lua.
+    readonly property var settingSections: [
+        { title: qsTr("Apps"), keys: ["terminal", "browser", "editor", "fileExplorer", "audioSettings"] },
+        { title: qsTr("Touchpad"), keys: ["touchpadDisableTyping", "touchpadScrollFactor", "gestureFingers", "workspaceSwipeFingers", "gestureFingersMore"] },
+        { title: qsTr("Blur"), keys: ["blurEnabled", "blurSpecialWs", "blurPopups", "blurInputMethods", "blurSize", "blurPasses", "blurXray"] },
+        { title: qsTr("Shadow"), keys: ["shadowEnabled", "shadowRange", "shadowRenderPower", "shadowColour"] },
+        { title: qsTr("Gaps"), keys: ["workspaceGaps", "windowGapsIn", "windowGapsOut", "singleWindowGapsOut"] },
+        { title: qsTr("Window styling"), keys: ["windowOpacity", "windowRounding", "windowRoundingPower", "windowBorderSize", "activeWindowBorderColour", "inactiveWindowBorderColour"] },
+        { title: qsTr("Misc"), keys: ["volumeStep", "volumeMax", "cursorTheme", "cursorSize", "sleepGestureCmd"] }
+    ]
+
     Component.onCompleted: {
         if (Hypr.usingLua) {
             Quickshell.execDetached(["hyprctl", "eval", "hl.define_submap('record', function() hl.bind('XF86LaunchA', hl.dsp.submap('reset')) end)"]);
@@ -32,233 +185,185 @@ PageBase {
         }
         loadVars();
     }
-    
-    property var defaults: ({})
-    
-    readonly property string configPath: Quickshell.env("HOME") + "/.config/caelestia/hypr-vars.lua"
-    readonly property string defaultsPath: Quickshell.env("HOME") + "/.config/hypr/variables.lua"
 
-    function saveVar(key, val) {
-        if (typeof val === "boolean") val = val ? "true" : "false";
-        else if (typeof val === "string" && !val.startsWith("rgba")) val = '"' + val + '"';
-        
-        let content = "";
-        if (CUtils.fileExists(configPath)) {
-            content = CUtils.readFile(configPath);
-        }
-        if (!content) {
-            content = "return {\n}";
-        }
-        
-                let currentVars = {};
+    function parseRawVars(content) {
+        let result = {};
+        if (!content) return result;
+
         let lines = content.split("\n");
         for (let i = 0; i < lines.length; i++) {
             let match = lines[i].match(/^\s*([a-zA-Z0-9_]+)\s*=\s*(.+?)\s*,?$/);
-            if (match && match[1] !== "return" && match[1] !== "local") {
-                currentVars[match[1]] = match[2];
-            }
+            if (match)
+                result[match[1]] = match[2];
         }
-        
-        currentVars[key] = val;
-        
+        return result;
+    }
+
+    function parseValue(raw) {
+        if (raw === undefined || raw === null) return undefined;
+
+        let val = String(raw).trim();
+        if (val.endsWith(",")) val = val.slice(0, -1).trim();
+
+        if (val === "true") return true;
+        if (val === "false") return false;
+
+        if (val.startsWith("{") && val.endsWith("}")) {
+            let values = [];
+            let inner = val.slice(1, -1);
+            let re = /"([^"]*)"|'([^']*)'|([^,]+)/g;
+            let match;
+            while ((match = re.exec(inner)) !== null) {
+                let item = match[1] !== undefined ? match[1] : (match[2] !== undefined ? match[2] : match[3]);
+                item = item.trim();
+                if (item.length > 0) values.push(item);
+            }
+            return values;
+        }
+
+        if ((val.startsWith("\"") && val.endsWith("\"")) || (val.startsWith("'") && val.endsWith("'")))
+            return val.slice(1, -1);
+
+        let number = Number(val);
+        if (val.length > 0 && !isNaN(number)) return number;
+
+        return val;
+    }
+
+    function serializeValue(value) {
+        if (typeof value === "boolean") return value ? "true" : "false";
+        if (typeof value === "number") return String(value);
+        if (Array.isArray(value)) {
+            let parts = [];
+            for (let i = 0; i < value.length; i++)
+                parts.push("\"" + String(value[i]).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"");
+            return "{ " + parts.join(", ") + " }";
+        }
+
+        let text = String(value);
+        if (text.startsWith("rgba(") || text.startsWith("scheme.")) return text;
+        return "\"" + text.replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
+    }
+
+    function displayValue(key) {
+        let value = root.vars[key] !== undefined ? root.vars[key] : root.defaults[key];
+        if (value === undefined) return qsTr("Unbound");
+        if (Array.isArray(value)) return value.join("  /  ");
+        return String(value);
+    }
+
+    function writeSchema() {
+        let sections = [];
+        for (let i = 0; i < settingSections.length; i++)
+            sections.push(settingSections[i]);
+
+        for (let i = 0; i < keybindSections.length; i++) {
+            let entries = keybindSections[i].entries;
+            let keys = [];
+            for (let j = 0; j < entries.length; j++)
+                keys.push(entries[j].key);
+            sections.push({ title: keybindSections[i].title, keys: keys });
+        }
+        return sections;
+    }
+
+    function buildContent(currentVars) {
         let needsScheme = false;
         for (let k in currentVars) {
             if (String(currentVars[k]).includes("scheme.")) needsScheme = true;
         }
-        
-        let newContent = needsScheme ? 'local scheme = require("scheme.current")\n\nreturn {\n' : 'return {\n';
+
+        let content = needsScheme ? "local scheme = require(\"scheme.current\")\n\nreturn {\n" : "return {\n";
         let written = {};
-        
-        let schema = [
-            { cat: "Apps", keys: ["terminal", "browser", "editor", "fileExplorer", "audioSettings"] },
-            { cat: "Touchpad", keys: ["touchpadDisableTyping", "touchScrollFactor", "gestureFingers", "workspaceSwipeFingers", "gestureFingersMore"] },
-            { cat: "Blur", keys: ["blurEnabled", "blurSpecialWs", "blurPopups", "blurInputMethods", "blurSize", "blurPasses", "blurXray"] },
-            { cat: "Shadow", keys: ["shadowEnabled", "shadowRange", "shadowRenderPower", "shadowColour"] },
-            { cat: "Gaps", keys: ["workspaceGaps", "windowGapsIn", "windowGapsOut", "singleWindowGapsOut"] },
-            { cat: "Window styling", keys: ["windowOpacity", "windowRounding", "windowBorderSize", "activeWindowBorderColour", "inactiveWindowBorderColour"] },
-            { cat: "Misc", keys: ["volumeStep", "cursorTheme", "cursorSize", "sleepGestureCmd"] },
-            
-            { cat: "Workspaces", keys: ["kbMoveWinToWs", "kbMoveWinToWsGroup", "kbGoToWs", "kbGoToWsGroup", "kbNextWs", "kbPrevWs"] },
-            { cat: "Window Group", keys: ["kbWindowGroupCycleNext", "kbWindowGroupCyclePrev", "kbUngroup", "kbToggleGroup"] },
-            { cat: "Window Action", keys: ["kbMoveWindow", "kbResizeWindow", "kbWindowPip", "kbPinWindow", "kbWindowFullscreen", "kbWindowBorderedFullscreen", "kbToggleWindowFloating", "kbCloseWindow"] },
-            { cat: "Special workspaces toggles", keys: ["kbSpecialWs", "kbSystemMonitorWs", "kbMusicWs", "kbCommunicationWs", "kbTodoWs"] },
-            { cat: "Apps (Keybinds)", keys: ["kbTerminal", "kbBrowser", "kbEditor", "kbFileExplorer"] },
-            { cat: "Misc (Keybinds)", keys: ["kbSession", "kbShowSidebar", "kbClearNotifs", "kbShowPanels", "kbLock", "kbRestoreLock"] }
-        ];
-        
-        for (let c = 0; c < schema.length; c++) {
-            let cat = schema[c];
-            let catHasVars = false;
-            
-            for (let k = 0; k < cat.keys.length; k++) {
-                let kName = cat.keys[k];
-                if (currentVars[kName] !== undefined) {
-                    if (!catHasVars) {
-                        newContent += "    -- " + cat.cat + "\n";
-                        catHasVars = true;
-                    }
-                    newContent += "    " + kName.padEnd(26) + " = " + currentVars[kName] + ",\n";
-                    written[kName] = true;
+        let sections = writeSchema();
+
+        for (let s = 0; s < sections.length; s++) {
+            let keys = sections[s].keys;
+            let emitted = false;
+
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                if (currentVars[key] === undefined) continue;
+
+                if (!emitted) {
+                    content += "    -- " + sections[s].title + "\n";
+                    emitted = true;
                 }
+                content += "    " + key.padEnd(26) + " = " + currentVars[key] + ",\n";
+                written[key] = true;
             }
-            if (catHasVars) newContent += "\n";
+            if (emitted) content += "\n";
         }
-        
-        let customHasVars = false;
-        for (let kName in currentVars) {
-            if (!written[kName]) {
-                if (!customHasVars) {
-                    newContent += "    -- Custom\n";
-                    customHasVars = true;
-                }
-                newContent += "    " + kName.padEnd(26) + " = " + currentVars[kName] + ",\n";
+
+        let custom = false;
+        for (let key in currentVars) {
+            if (written[key]) continue;
+            if (!custom) {
+                content += "    -- Custom\n";
+                custom = true;
             }
+            content += "    " + key.padEnd(26) + " = " + currentVars[key] + ",\n";
         }
-        
-        newContent = newContent.replace(/\s+$/, "") + "\n}\n";
-        
+
+        return content.replace(/\s+$/, "") + "\n}\n";
+    }
+
+    function writeConfig(content) {
         try {
-            CUtils.writeFile(configPath, newContent);
+            CUtils.writeFile(configPath, content);
         } catch (e) {
             console.log("Could not write file natively yet: " + e);
-            Quickshell.execDetached(["bash", "-c", "cat << 'EOF' > " + configPath + "\n" + newContent + "\nEOF"]);
+            Quickshell.execDetached(["bash", "-c", "cat << 'EOF' > " + configPath + "\n" + content + "\nEOF"]);
         }
+    }
+
+    function saveVar(key, val) {
+        let currentVars = parseRawVars(CUtils.fileExists(configPath) ? CUtils.readFile(configPath) : "");
+        currentVars[key] = serializeValue(val);
+        writeConfig(buildContent(currentVars));
         loadVars();
     }
 
     function deleteVar(key) {
         if (!CUtils.fileExists(configPath)) return;
-        let content = CUtils.readFile(configPath);
-        if (!content) return;
-        
-        let currentVars = {};
-        let lines = content.split("\n");
-        for (let i = 0; i < lines.length; i++) {
-            let match = lines[i].match(/^\s*([a-zA-Z0-9_]+)\s*=\s*(.+?)\s*,?$/);
-            if (match && match[1] !== "return" && match[1] !== "local") {
-                currentVars[match[1]] = match[2];
-            }
-        }
-        
+
+        let currentVars = parseRawVars(CUtils.readFile(configPath));
         if (currentVars[key] === undefined) return;
+
         delete currentVars[key];
-        
-        let needsScheme = false;
-        for (let k in currentVars) {
-            if (String(currentVars[k]).includes("scheme.")) needsScheme = true;
-        }
-        
-        let newContent = needsScheme ? 'local scheme = require("scheme.current")\n\nreturn {\n' : 'return {\n';
-        let written = {};
-        
-        let schema = [
-            { cat: "Apps", keys: ["terminal", "browser", "editor", "fileExplorer", "audioSettings"] },
-            { cat: "Touchpad", keys: ["touchpadDisableTyping", "touchScrollFactor", "gestureFingers", "workspaceSwipeFingers", "gestureFingersMore"] },
-            { cat: "Blur", keys: ["blurEnabled", "blurSpecialWs", "blurPopups", "blurInputMethods", "blurSize", "blurPasses", "blurXray"] },
-            { cat: "Shadow", keys: ["shadowEnabled", "shadowRange", "shadowRenderPower", "shadowColour"] },
-            { cat: "Gaps", keys: ["workspaceGaps", "windowGapsIn", "windowGapsOut", "singleWindowGapsOut"] },
-            { cat: "Window styling", keys: ["windowOpacity", "windowRounding", "windowBorderSize", "activeWindowBorderColour", "inactiveWindowBorderColour"] },
-            { cat: "Misc", keys: ["volumeStep", "cursorTheme", "cursorSize", "sleepGestureCmd"] },
-            
-            { cat: "Workspaces", keys: ["kbMoveWinToWs", "kbMoveWinToWsGroup", "kbGoToWs", "kbGoToWsGroup", "kbNextWs", "kbPrevWs"] },
-            { cat: "Window Group", keys: ["kbWindowGroupCycleNext", "kbWindowGroupCyclePrev", "kbUngroup", "kbToggleGroup"] },
-            { cat: "Window Action", keys: ["kbMoveWindow", "kbResizeWindow", "kbWindowPip", "kbPinWindow", "kbWindowFullscreen", "kbWindowBorderedFullscreen", "kbToggleWindowFloating", "kbCloseWindow"] },
-            { cat: "Special workspaces toggles", keys: ["kbSpecialWs", "kbSystemMonitorWs", "kbMusicWs", "kbCommunicationWs", "kbTodoWs"] },
-            { cat: "Apps (Keybinds)", keys: ["kbTerminal", "kbBrowser", "kbEditor", "kbFileExplorer"] },
-            { cat: "Misc (Keybinds)", keys: ["kbSession", "kbShowSidebar", "kbClearNotifs", "kbShowPanels", "kbLock", "kbRestoreLock"] }
-        ];
-        
-        for (let c = 0; c < schema.length; c++) {
-            let cat = schema[c];
-            let catHasVars = false;
-            
-            for (let k = 0; k < cat.keys.length; k++) {
-                let kName = cat.keys[k];
-                if (currentVars[kName] !== undefined) {
-                    if (!catHasVars) {
-                        newContent += "    -- " + cat.cat + "\n";
-                        catHasVars = true;
-                    }
-                    newContent += "    " + kName.padEnd(26) + " = " + currentVars[kName] + ",\n";
-                    written[kName] = true;
-                }
-            }
-            if (catHasVars) newContent += "\n";
-        }
-        
-        let customHasVars = false;
-        for (let kName in currentVars) {
-            if (!written[kName]) {
-                if (!customHasVars) {
-                    newContent += "    -- Custom\n";
-                    customHasVars = true;
-                }
-                newContent += "    " + kName.padEnd(26) + " = " + currentVars[kName] + ",\n";
-            }
-        }
-        
-        newContent = newContent.replace(/\s+$/, "") + "\n}\n";
-        
-        try {
-            CUtils.writeFile(configPath, newContent);
-        } catch (e) {
-            console.log("Could not write file natively yet: " + e);
-            Quickshell.execDetached(["bash", "-c", "cat << 'EOF' > " + configPath + "\n" + newContent + "\nEOF"]);
-        }
+        writeConfig(buildContent(currentVars));
         loadVars();
     }
-    
+
     function loadVars() {
-        let defContent = CUtils.readFile(defaultsPath);
         let dVars = {};
+        let defContent = CUtils.readFile(defaultsPath);
         if (defContent) {
-            let dLines = defContent.split("\n");
-            for (let i = 0; i < dLines.length; i++) {
-                let line = dLines[i].trim();
-                let match = line.match(/^([a-zA-Z0-9_]+)\s*=\s*(.+?)\s*,?$/);
-                if (match) {
-                    let key = match[1], val = match[2];
-                    if (val === "true") val = true;
-                    else if (val === "false") val = false;
-                    else if (val.startsWith("\"") && val.endsWith("\"")) val = val.substring(1, val.length - 1);
-                    else if (!isNaN(parseFloat(val))) val = parseFloat(val);
-                    dVars[key] = val;
-                }
-            }
+            let rawDefaults = parseRawVars(defContent);
+            for (let key in rawDefaults)
+                dVars[key] = parseValue(rawDefaults[key]);
         }
         root.defaults = dVars;
-        
-        let content = "";
-        if (CUtils.fileExists(configPath)) {
-            content = CUtils.readFile(configPath);
-        }
+
         let newVars = {};
-        if (content) {
-            let textLines = content.split("\n");
-            for (let i = 0; i < textLines.length; i++) {
-                let line = textLines[i].trim();
-                let match = line.match(/^([a-zA-Z0-9_]+)\s*=\s*(.+?)\s*,?$/);
-                if (match) {
-                    let key = match[1], val = match[2];
-                    if (val === "true") val = true;
-                    else if (val === "false") val = false;
-                    else if (val.startsWith("\"") && val.endsWith("\"")) val = val.substring(1, val.length - 1);
-                    else if (!isNaN(parseFloat(val))) val = parseFloat(val);
-                    newVars[key] = val;
-                }
-            }
+        if (CUtils.fileExists(configPath)) {
+            let rawVars = parseRawVars(CUtils.readFile(configPath));
+            for (let key in rawVars)
+                newVars[key] = parseValue(rawVars[key]);
         }
         root.vars = newVars;
     }
+
     component KeybindRow : ConnectedRect {
         id: kroot
         property string label
         property string varKey
+        property string hint: ""
         property bool recording: false
 
         Layout.fillWidth: true
         implicitHeight: contentRow.implicitHeight + contentRow.anchors.margins * 2
-        
+
         StateLayer {
             id: stateLayer
             anchors.fill: parent
@@ -281,7 +386,7 @@ PageBase {
                 }
             }
         }
-        
+
         RowLayout {
             id: contentRow
             anchors.fill: parent
@@ -289,21 +394,21 @@ PageBase {
             anchors.leftMargin: Tokens.padding.largeIncreased
             anchors.rightMargin: Tokens.padding.largeIncreased
             spacing: Tokens.spacing.medium
-            
+
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 0
-                
+
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Tokens.spacing.small
-                    
+
                     StyledText {
                         text: kroot.label
                         font: Tokens.font.body.small
                         elide: Text.ElideRight
                     }
-                    
+
                     IconButton {
                         icon: "delete"
                         type: IconButton.Text
@@ -318,20 +423,20 @@ PageBase {
                 }
 
                 StyledText {
-                    text: kroot.recording ? "Recording..." : (root.vars[kroot.varKey] !== undefined ? String(root.vars[kroot.varKey]) : (root.defaults[kroot.varKey] !== undefined ? String(root.defaults[kroot.varKey]) : "Unbound"))
+                    text: kroot.recording ? qsTr("Recording…") : root.displayValue(kroot.varKey) + (kroot.hint.length > 0 ? "  ·  " + kroot.hint : "")
                     color: Colours.palette.m3outline
                     font: Tokens.font.label.small
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
             }
-            
+
             Item {
                 id: recordBtn
-                
+
                 implicitWidth: btn.implicitWidth * 0.9
                 implicitHeight: btn.implicitHeight * 0.9
-                
+
                 BlobGroup {
                     id: blobGroup
                     color: kroot.recording || stateLayer.containsMouse ? Colours.palette.m3secondaryContainer : Colours.palette.m3surfaceContainerHighest
@@ -342,7 +447,7 @@ PageBase {
                         CAnim {}
                     }
                 }
-                
+
                 BlobRect {
                     id: btnRect
                     anchors.fill: parent
@@ -360,13 +465,13 @@ PageBase {
                         }
                     }
                 }
-                
+
                 Item {
                     id: btn
                     anchors.centerIn: parent
                     implicitWidth: implicitHeight
                     implicitHeight: icon.implicitHeight + Tokens.padding.extraSmall * 2
-                    
+
                     MaterialIcon {
                         id: icon
                         anchors.centerIn: parent
@@ -377,13 +482,13 @@ PageBase {
                 }
             }
         }
-        
+
         Item {
             id: focusItem
             focus: kroot.recording
             property bool modifierOnly: false
             property var lastMods: []
-            
+
             Keys.onPressed: (event) => {
                 if (!kroot.recording) return;
                 let k = event.key;
@@ -393,13 +498,13 @@ PageBase {
                     event.accepted = true;
                     return;
                 }
-                
+
                 let mods = [];
                 if (event.modifiers & Qt.ControlModifier) mods.push("CTRL");
                 if (event.modifiers & Qt.ShiftModifier) mods.push("SHIFT");
                 if (event.modifiers & Qt.AltModifier) mods.push("ALT");
                 if (event.modifiers & Qt.MetaModifier) mods.push("SUPER");
-                
+
                 let keyStr = "";
                 if (k >= Qt.Key_A && k <= Qt.Key_Z) {
                     keyStr = String.fromCharCode(k);
@@ -451,18 +556,18 @@ PageBase {
                     else if (k === Qt.Key_Shift) modStr = "SHIFT";
                     else if (k === Qt.Key_Alt) modStr = "ALT";
                     else if (k === Qt.Key_Meta || k === Qt.Key_Super_L || k === Qt.Key_Super_R) modStr = "SUPER";
-                    
+
                     if (!mods.includes(modStr) && modStr !== "") mods.push(modStr);
                     lastMods = mods;
                     event.accepted = true;
                 }
             }
-            
+
             Keys.onReleased: (event) => {
                 if (!kroot.recording) return;
                 let k = event.key;
                 let isModKey = (k === Qt.Key_Control || k === Qt.Key_Shift || k === Qt.Key_Alt || k === Qt.Key_Meta || k === Qt.Key_Super_L || k === Qt.Key_Super_R);
-                
+
                 if (isModKey && modifierOnly && lastMods.length > 0) {
                     let finalBind = lastMods.join(" + ");
                     root.saveVar(kroot.varKey, finalBind);
@@ -473,76 +578,49 @@ PageBase {
             }
         }
     }
+
     ColumnLayout {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         width: root.cappedWidth
         spacing: Tokens.spacing.extraSmall / 2
 
-        SectionHeader {
-            first: true
-            text: qsTr("Workspaces")
-        }
-        
-        KeybindRow { first: true; label: "Move window to workspace"; varKey: "kbMoveWinToWs" }
-        KeybindRow { label: "Move window to workspace group"; varKey: "kbMoveWinToWsGroup" }
-        KeybindRow { label: "Go to workspace"; varKey: "kbGoToWs" }
-        KeybindRow { label: "Go to workspace group"; varKey: "kbGoToWsGroup" }
-        KeybindRow { label: "Next workspace"; varKey: "kbNextWs" }
-        KeybindRow { last: true; label: "Previous workspace"; varKey: "kbPrevWs" }
-        
-        SectionHeader {
-            text: qsTr("Window Group")
-        }
-        
-        KeybindRow { first: true; label: "Cycle next in group"; varKey: "kbWindowGroupCycleNext" }
-        KeybindRow { label: "Cycle previous in group"; varKey: "kbWindowGroupCyclePrev" }
-        KeybindRow { label: "Ungroup"; varKey: "kbUngroup" }
-        KeybindRow { last: true; label: "Toggle group"; varKey: "kbToggleGroup" }
-        
-        SectionHeader {
-            text: qsTr("Window Action")
-        }
-        
-        KeybindRow { first: true; label: "Move window"; varKey: "kbMoveWindow" }
-        KeybindRow { label: "Resize window"; varKey: "kbResizeWindow" }
-        KeybindRow { label: "Picture-in-picture"; varKey: "kbWindowPip" }
-        KeybindRow { label: "Pin window"; varKey: "kbPinWindow" }
-        KeybindRow { label: "Fullscreen"; varKey: "kbWindowFullscreen" }
-        KeybindRow { label: "Bordered fullscreen"; varKey: "kbWindowBorderedFullscreen" }
-        KeybindRow { label: "Toggle floating"; varKey: "kbToggleWindowFloating" }
-        KeybindRow { last: true; label: "Close window"; varKey: "kbCloseWindow" }
+        Repeater {
+            model: root.keybindSections
 
-        SectionHeader {
-            text: qsTr("Special Workspaces")
-        }
-        
-        KeybindRow { first: true; label: "Special workspace toggle"; varKey: "kbSpecialWs" }
-        KeybindRow { label: "System monitor"; varKey: "kbSystemMonitorWs" }
-        KeybindRow { label: "Music"; varKey: "kbMusicWs" }
-        KeybindRow { label: "Communication"; varKey: "kbCommunicationWs" }
-        KeybindRow { last: true; label: "To-do"; varKey: "kbTodoWs" }
+            delegate: ColumnLayout {
+                id: sectionColumn
+                required property var modelData
+                required property int index
 
-        SectionHeader {
-            text: qsTr("Apps")
+                Layout.fillWidth: true
+                spacing: Tokens.spacing.extraSmall / 2
+
+                SectionHeader {
+                    first: sectionColumn.index === 0
+                    text: sectionColumn.modelData.title
+                }
+
+                Repeater {
+                    model: sectionColumn.modelData.entries
+
+                    delegate: KeybindRow {
+                        required property var modelData
+                        required property int index
+
+                        first: index === 0
+                        last: index === sectionColumn.modelData.entries.length - 1
+                        label: modelData.label
+                        varKey: modelData.key
+                        hint: modelData.hint !== undefined ? modelData.hint : ""
+                    }
+                }
+            }
         }
-        
-        KeybindRow { first: true; label: "Terminal"; varKey: "kbTerminal" }
-        KeybindRow { label: "Browser"; varKey: "kbBrowser" }
-        KeybindRow { label: "Editor"; varKey: "kbEditor" }
-        KeybindRow { last: true; label: "File Explorer"; varKey: "kbFileExplorer" }
-        
-        SectionHeader {
-            text: qsTr("Misc")
+
+        Item {
+            Layout.preferredHeight: Tokens.padding.large
+            Layout.fillWidth: true
         }
-        
-        KeybindRow { first: true; label: "Session menu"; varKey: "kbSession" }
-        KeybindRow { label: "Show sidebar"; varKey: "kbShowSidebar" }
-        KeybindRow { label: "Clear notifications"; varKey: "kbClearNotifs" }
-        KeybindRow { label: "Show panels"; varKey: "kbShowPanels" }
-        KeybindRow { label: "Lock screen"; varKey: "kbLock" }
-        KeybindRow { last: true; label: "Restore lock screen"; varKey: "kbRestoreLock" }
-        
-        Item { Layout.preferredHeight: Tokens.padding.large; Layout.fillWidth: true }
     }
 }
