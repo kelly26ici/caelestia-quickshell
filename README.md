@@ -96,7 +96,7 @@ sudo git clone https://github.com/adiambassador/caelestia-shell-aw /etc/xdg/quic
 
 ```bash
 mkdir -p ~/.config/quickshell
-git clone https://github.com/YOUR_USERNAME/caelestia-quickshell.git ~/.config/quickshell/caelestia
+git clone https://github.com/kelly26ici/caelestia-quickshell.git ~/.config/quickshell/caelestia
 cd ~/.config/quickshell/caelestia
 ```
 
