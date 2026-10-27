@@ -1,0 +1,39 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Disturbed*
+.AppleDouble
+
+# Editor files
+*.swp
+*.swo
+*~
+.ide/
+.vscode/
+.idea/
+
+# Environment
+.env
+.envrc
+.direnv/
+
+# Shell-specific
+*.lock
+*.pid
+*.log
+
+# Generated QML caches
+qmldir.bak
+
+# Environment artifacts
+.claude-flow/
+ruvector.db
