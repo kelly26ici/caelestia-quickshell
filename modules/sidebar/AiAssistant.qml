@@ -27,6 +27,58 @@ Item {
     property var currentRequest: null
     property bool isStreaming: false
     property string commandNotice: ""
+    property string attachedFilePath: ""
+    property string attachedFileBase64: ""
+    property var wrapperItem: null
+
+    focus: true
+
+    function toggleExtend() {
+        if (wrapperItem && wrapperItem.hasOwnProperty("isExtended")) {
+            wrapperItem.isExtended = !wrapperItem.isExtended;
+            root.commandNotice = wrapperItem.isExtended ? "Sidebar extended" : "Sidebar normal width";
+            commandNoticeTimer.restart();
+        }
+    }
+
+    function togglePin() {
+        var comps = ShellState.componentsForActive();
+        if (comps && comps.interactionWrapper) {
+            comps.interactionWrapper.sidebarShortcutActive = !comps.interactionWrapper.sidebarShortcutActive;
+            root.commandNotice = comps.interactionWrapper.sidebarShortcutActive ? "Sidebar pinned" : "Sidebar unpinned";
+            commandNoticeTimer.restart();
+        }
+    }
+
+    function dismissSidebar() {
+        root.commandNotice = "Dismissing sidebar...";
+        commandNoticeTimer.restart();
+        root.screenState.sidebar = false;
+    }
+
+    function focusInput() {
+        if (!isHistoryTab && inputArea) {
+            inputArea.forceActiveFocus();
+        }
+    }
+
+    Keys.onPressed: event => {
+        if (event.modifiers === Qt.ControlModifier) {
+            if (event.key === Qt.Key_O) {
+                root.toggleExtend();
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_P) {
+                root.togglePin();
+                event.accepted = true;
+                return;
+            } else if (event.key === Qt.Key_D) {
+                root.dismissSidebar();
+                event.accepted = true;
+                return;
+            }
+        }
+    }
 
     Timer {
         id: typingTimer
@@ -321,6 +373,30 @@ Item {
     }
     property bool inAgentLoop: false
 
+    Process {
+        id: clipAttachProc
+        command: ["bash", Quickshell.shellDir + "/scripts/ai/attach_clipboard.sh"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var p = (text || "").trim();
+                if (p.length > 0) {
+                    root.attachedFilePath = p;
+                    b64EncodeProc.command = ["python3", Quickshell.shellDir + "/scripts/ai/image_to_base64.py", p];
+                    b64EncodeProc.running = true;
+                }
+            }
+        }
+    }
+
+    Process {
+        id: b64EncodeProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.attachedFileBase64 = (text || "").trim();
+            }
+        }
+    }
+
     function runAgentCommand(cmd, type) {
         var processQml = "import QtQuick\n" +
                          "import Quickshell.Io\n" +
@@ -389,8 +465,19 @@ Item {
 
     Process {
         id: storeDirProc
-        command: ["mkdir", "-p", Paths.data + "/ai"]
-        onExited: chatStore.reload()
+        command: ["python3", Quickshell.shellDir + "/scripts/ai/load_chat_history.py"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var raw = text ? text.trim() : "";
+                var data = [];
+                try {
+                    data = JSON.parse(raw);
+                } catch (e) {
+                    data = [];
+                }
+                root.applyStoreData(data);
+            }
+        }
     }
 
     Timer {
@@ -704,14 +791,24 @@ Item {
         flushHistory();
     }
 
+    Process {
+        id: historySaverProc
+        command: ["python3", Quickshell.shellDir + "/scripts/ai/save_chat_history.py"]
+    }
+
     function flushHistory() {
         historySaveTimer.stop();
-        if (storeReady)
-            chatStore.setText(JSON.stringify({
+        if (storeReady) {
+            var payload = JSON.stringify({
                 "version": 2,
                 "lastChatId": currentChatId || lastChatId,
                 "chats": allChatSessions
-            }));
+            });
+            chatStore.setText(payload);
+            // Robust disk write fallback
+            var pQml = "import QtQuick\nimport Quickshell.Io\nProcess { command: [\"sh\", \"-c\", \"cat > ~/.local/share/caelestia/ai/chats.json\"]; stdin: StdioStream { text: " + JSON.stringify(payload) + " }; running: true; onExited: destroy(); }";
+            try { Qt.createQmlObject(pQml, root, "saver_" + Date.now()); } catch(e) {}
+        }
     }
 
     function saveHistory() {
@@ -1355,14 +1452,14 @@ Item {
                                     }
                                     
                                     if (toolName === "web_search") {
-                                        currentActionText = "Searching the web...";
+                                        currentActionText = "Searching the web with Tavily...";
                                         var query = args.query;
                                         var page = args.page || 1;
-                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/assets/scripts/orion_search.py" --mode search --query "' + query.replace(new RegExp("\"", "g"), '\"') + '" --page ' + page, "exec_" + toolName);
+                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/orion_search.py" --mode search --query "' + query.replace(new RegExp("\"", "g"), '\\"') + '" --page ' + page, "exec_" + toolName);
                                     } else if (toolName === "read_webpage") {
                                         currentActionText = "Reading webpage...";
                                         var url = args.url;
-                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/assets/scripts/orion_search.py" --mode read --url "' + url.replace(new RegExp("\"", "g"), '\"') + '"', "exec_" + toolName);
+                                        runAgentCommand('PYTHONIOENCODING=utf8 python3 "' + Quickshell.shellDir + '/scripts/ai/orion_search.py" --mode read --url "' + url.replace(new RegExp("\"", "g"), '\\"') + '"', "exec_" + toolName);
                                     } else if (toolName === "open_app") {
                                         currentActionText = "Opening app...";
                                         var app = args.app_name;
@@ -1494,11 +1591,22 @@ Item {
                 }
 
             } else {
+                var userContent;
+                if (root.attachedFileBase64.length > 0) {
+                    userContent = [
+                        { "type": "text", "text": promptText },
+                        { "type": "image_url", "image_url": { "url": root.attachedFileBase64 } }
+                    ];
+                } else {
+                    userContent = promptText;
+                }
                 var toolMsg = {
                     "role": "user",
-                    "content": promptText
+                    "content": userContent
                 };
                 messages.push(toolMsg);
+                root.attachedFilePath = "";
+                root.attachedFileBase64 = "";
             }
             pendingToolCalls = null;
             pendingAssistantContent = "";
@@ -1521,7 +1629,7 @@ Item {
                     "type": "function",
                     "function": {
                         "name": "web_search",
-                        "description": "Searches the web using a headless Firefox browser. Returns the top 5 results with snippets and URLs. Requires the Playwright Firefox browser; if the call fails, tell the user to run: playwright install firefox.",
+                        "description": "Searches the live web using the Tavily Search API. Returns direct synthesized answers, ranked search results, URLs, and relevant content snippets.",
                         "parameters": {
                             "type": "object",
                             "properties": {
@@ -2176,6 +2284,21 @@ Item {
                      }
                  }
 
+                 // Attached File Preview Indicator
+                 AttachedFileIndicator {
+                     id: attachedIndicator
+                     anchors.bottom: commandHelper.visible ? commandHelper.top : inputBoxRow.top
+                     anchors.left: parent.left
+                     anchors.right: parent.right
+                     anchors.bottomMargin: Tokens.spacing.small
+                     z: 15
+                     filePath: root.attachedFilePath
+                     onRemove: {
+                         root.attachedFilePath = "";
+                         root.attachedFileBase64 = "";
+                     }
+                 }
+
                  // Slash-command hints and feedback
                  StyledRect {
                      id: commandHelper
@@ -2338,6 +2461,24 @@ Item {
                                  }
 
                                  Keys.onPressed: event => {
+                                     if (event.modifiers === Qt.ControlModifier) {
+                                         if (event.key === Qt.Key_O) {
+                                             root.toggleExtend();
+                                             event.accepted = true;
+                                             return;
+                                         } else if (event.key === Qt.Key_P) {
+                                             root.togglePin();
+                                             event.accepted = true;
+                                             return;
+                                         } else if (event.key === Qt.Key_D) {
+                                             root.dismissSidebar();
+                                             event.accepted = true;
+                                             return;
+                                         }
+                                     }
+                                     if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V && !(event.modifiers & Qt.ShiftModifier)) {
+                                         clipAttachProc.running = true;
+                                     }
                                      if (event.key === Qt.Key_Tab && root.commandMatches.length > 0) {
                                          event.accepted = true;
                                          inputArea.text = "/" + root.commandMatches[0].name + " ";

@@ -13,6 +13,7 @@ Item {
 
     property var popouts
     property var utilities
+    property var sidebarWrapper
     property bool sidebarStreaming: false
 
     readonly property bool isBarHorizontal: Config.bar.position === "top" || Config.bar.position === "bottom"
@@ -46,6 +47,10 @@ Item {
             if (root.screenState.sidebar) {
                 root.activeTab = Visibilities.initialSidebarTab;
                 checkTabs();
+                // Bring keyboard focus to the assistant input when the
+                // sidebar is opened on the AI tab so typing works directly.
+                if (root.activeTab === "ai")
+                    Qt.callLater(() => aiAssistant.focusInput());
             }
         }
     }
@@ -73,7 +78,14 @@ Item {
         }
     }
 
-    Component.onCompleted: checkTabs()
+    Component.onCompleted: {
+        checkTabs();
+        // The Loader may create this component after the sidebar-open signal
+        // has already fired, so also focus the AI input when created while
+        // the sidebar is open on the AI tab.
+        if (root.screenState.sidebar && root.activeTab === "ai")
+            Qt.callLater(() => aiAssistant.focusInput());
+    }
 
     GridLayout {
         id: layout
@@ -236,6 +248,7 @@ Item {
                         x: root.activeTab === "ai" ? 0 : (indicator.activeIndex < 1 ? width : -width)
                         opacity: root.activeTab === "ai" ? 1 : 0
                         visible: opacity > 0
+                        wrapperItem: root.sidebarWrapper
 
                         Connections {
                             target: aiAssistant

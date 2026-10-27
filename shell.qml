@@ -8,6 +8,7 @@ pragma ComponentBehavior: Bound
 
 import QtQml
 import Quickshell
+import Quickshell.Io
 import Caelestia.Config
 import qs.components.containers
 import qs.utils
@@ -17,6 +18,7 @@ import "modules/drawers"
 import "modules/background"
 import "modules/shimeji"
 import "modules/areapicker"
+import "modules/dock"
 import "modules/lock"
 import QtQuick
 import "modules/polkit"
@@ -53,6 +55,22 @@ ShellRoot {
         Shimeji {
             shimejiCount: GlobalConfig.shimeji?.count ?? 1
         }
+    }
+
+    Gate {
+        id: dockGate
+    }
+
+    Component {
+        id: dockComponent
+
+        Dock {
+        }
+    }
+
+    Loader {
+        active: dockGate.gateEnabled === true
+        sourceComponent: dockComponent
     }
 
     Shortcuts {}
